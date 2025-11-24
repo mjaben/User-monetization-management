@@ -1,7 +1,7 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-class FC_MyCRED_Integration {
+class UMM_Rewards {
 
     public function __construct() {
         add_action('fluent_community/feed/created', [$this, 'award_points_for_feed']);
@@ -19,14 +19,25 @@ class FC_MyCRED_Integration {
         // Get settings
         $options = get_option('fc_mycred_settings', []);
         $points  = !empty($options['post_points']) ? intval($options['post_points']) : 10;
-        $label   = !empty($options['post_label']) ? sanitize_text_field($options['post_label']) : __('Post', 'fcm-mycred');
+        $label   = !empty($options['post_label']) ? sanitize_text_field($options['post_label']) : __('Post', 'user-monetization-manager');
+
+        // Check if already awarded
+        if ( function_exists('mycred_get_users_log_entries') ) {
+            $existing = mycred_get_users_log_entries($user_id, 0, 1, [], [
+                'ref' => 'fluent_community_new_post',
+                'ref_id' => $feed_id
+            ]);
+            if (!empty($existing)) {
+                return; // Already awarded
+            }
+        }
 
         // Award points
         mycred_add(
             'fluent_community_new_post', // static reference
             $user_id,
             $points,
-            sprintf(__('Points for creating a new %s in Fluent Community', 'fcm-mycred'), $label),
+            sprintf(__('Points for creating a new %s in Fluent Community', 'user-monetization-manager'), $label),
             $feed_id
         );
     }
@@ -47,14 +58,25 @@ class FC_MyCRED_Integration {
         // Get settings
         $options = get_option('fc_mycred_settings', []);
         $points  = !empty($options['comment_points']) ? intval($options['comment_points']) : 5;
-        $label   = !empty($options['comment_label']) ? sanitize_text_field($options['comment_label']) : __('Comment', 'fcm-mycred');
+        $label   = !empty($options['comment_label']) ? sanitize_text_field($options['comment_label']) : __('Comment', 'user-monetization-manager');
+
+        // Check if already awarded
+        if ( function_exists('mycred_get_users_log_entries') ) {
+            $existing = mycred_get_users_log_entries($user_id, 0, 1, [], [
+                'ref' => 'fluent_community_new_comment',
+                'ref_id' => $comment_id
+            ]);
+            if (!empty($existing)) {
+                return; // Already awarded
+            }
+        }
 
         // Award points
         mycred_add(
             'fluent_community_new_comment', // static reference
             $user_id,
             $points,
-            sprintf(__('Points for creating a new %s in Fluent Community', 'fcm-mycred'), $label),
+            sprintf(__('Points for creating a new %s in Fluent Community', 'user-monetization-manager'), $label),
             $comment_id ?: ($feed->id ?? 0)
         );
     }
