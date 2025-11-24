@@ -24,7 +24,7 @@ class FC_MyCRED_Integration {
             'fluent_community_new_post',
             $user_id,
             $points,
-            sprintf(__('Points for creating a new %s in Fluent Community', 'fcm-mycred'), $label),
+            sprintf(__('Points for creating a new %s ', 'fcm-mycred'), $label),
             $feed->id
         );
     }
@@ -53,7 +53,7 @@ class FC_MyCRED_Integration {
             'fluent_community_new_comment',
             $user_id,
             $points,
-            sprintf(__('Points for creating a new %s in Fluent Community', 'fcm-mycred'), $label),
+            sprintf(__('Points for creating a new %s', 'fcm-mycred'), $label),
             $comment_id ?: ( $feed->id ?? 0 )
         );
     }

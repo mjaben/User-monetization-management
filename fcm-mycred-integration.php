@@ -4,12 +4,11 @@ Plugin Name: FCM myCRED Addon
 Description: Award myCRED points for Fluent Community posts and comments.
 Version: 1.1
 Author: Matthew John Alex (mjaben)
-Text Domain: fcm-mycred-integration
-Domain Path: /languages
+Text Domain: fcm-mycred-reward-users
 License: GPL2
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Tags: mycred, fluent community, points, rewards, gamification
-GitHub Plugin URI: https://github.com/mjaben/Fcm-mycred-reward-users
+GitHub Plugin URI: https://github.com/mjaben/fcm-mycred-reward-users
 Requires at least: 5.0
 Requires PHP: 7.0
 */
