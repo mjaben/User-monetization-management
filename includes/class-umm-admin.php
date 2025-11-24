@@ -78,6 +78,24 @@ class UMM_Admin {
             self::PAGE_SLUG,
             'fc_mycred_main'
         );
+
+        // Withdrawal Settings Section
+        add_settings_section(
+            'umm_withdrawal_settings',
+            __('Withdrawal Settings', 'user-monetization-manager'),
+            function () {
+                echo '<p>' . esc_html__('Configure withdrawal requirements and limits.', 'user-monetization-manager') . '</p>';
+            },
+            self::PAGE_SLUG
+        );
+
+        add_settings_field(
+            'min_withdrawal_threshold',
+            __('Minimum Withdrawal Threshold', 'user-monetization-manager'),
+            [$this, 'field_min_threshold'],
+            self::PAGE_SLUG,
+            'umm_withdrawal_settings'
+        );
     }
 
     public function sanitize_settings( $input ) {
@@ -108,6 +126,13 @@ class UMM_Admin {
         $output['comment_label'] = isset($input['comment_label']) ? sanitize_text_field($input['comment_label']) : $defaults['comment_label'];
         if ( $output['comment_label'] === '' ) {
             $output['comment_label'] = $defaults['comment_label'];
+        }
+
+        // Minimum Withdrawal Threshold
+        $output['min_withdrawal_threshold'] = isset($input['min_withdrawal_threshold']) ? (int) $input['min_withdrawal_threshold'] : $defaults['min_withdrawal_threshold'];
+        if ( $output['min_withdrawal_threshold'] < 0 ) {
+            $output['min_withdrawal_threshold'] = 0;
+            add_settings_error(self::OPTION_KEY, 'min_threshold', __('Minimum withdrawal threshold cannot be negative.', 'user-monetization-manager'), 'error');
         }
 
         // Success notice (will show after redirect)
@@ -157,6 +182,16 @@ class UMM_Admin {
             esc_attr($opts['comment_label'])
         );
         echo '<p class="description">' . esc_html__('Label used in logs/UI for comment awards (e.g., "Comment", "Reply").', 'user-monetization-manager') . '</p>';
+    }
+
+    public function field_min_threshold() {
+        $opts = $this->get_options();
+        printf(
+            '<input type="number" class="small-text" name="%1$s[min_withdrawal_threshold]" value="%2$d" min="0" />',
+            esc_attr(self::OPTION_KEY),
+            (int) $opts['min_withdrawal_threshold']
+        );
+        echo '<p class="description">' . esc_html__('Minimum points required before users can withdraw. Set to 0 for no minimum.', 'user-monetization-manager') . '</p>';
     }
 
     /* ------------------------
@@ -308,12 +343,26 @@ class UMM_Admin {
             'post_label'     => 'Post',
             'comment_points' => 5,
             'comment_label'  => 'Comment',
+            'min_withdrawal_threshold' => 1000,
         ];
     }
 
     private function get_options() {
         $opts = get_option(self::OPTION_KEY, []);
         return wp_parse_args($opts, $this->get_defaults());
+    }
+
+    public static function get_min_withdrawal_threshold() {
+        $opts = get_option(self::OPTION_KEY, []);
+        $defaults = [
+            'post_points'    => 10,
+            'post_label'     => 'Post',
+            'comment_points' => 5,
+            'comment_label'  => 'Comment',
+            'min_withdrawal_threshold' => 1000,
+        ];
+        $opts = wp_parse_args($opts, $defaults);
+        return (int) $opts['min_withdrawal_threshold'];
     }
 
     public function enqueue_assets( $hook ) {

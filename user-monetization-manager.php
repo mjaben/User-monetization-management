@@ -1,10 +1,11 @@
 <?php
 /*
 Plugin Name: User Monetization Manager
-Plugin URI: https://example.com
 Description: Complete solution for rewarding users via myCRED and handling withdrawals.
-Version: 2.0
-Author: Matthew
+Version: 2.1
+Author: Matthew John Alex
+Author URI: https://mjaben.com
+
 
 License: GPL2
 Text Domain: user-monetization-manager
@@ -14,7 +15,7 @@ Domain Path: /languages
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 // Define constants
-define('UMM_VERSION', '2.0');
+define('UMM_VERSION', '2.1');
 define('UMM_PATH', plugin_dir_path(__FILE__));
 define('UMM_URL', plugin_dir_url(__FILE__));
 
