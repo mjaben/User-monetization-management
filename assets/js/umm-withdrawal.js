@@ -18,7 +18,7 @@ jQuery(document).ready(function($) {
         var btn  = form.find('button');
         var msg  = form.find('.mycred-isp-message');
 
-        btn.prop('disabled', true).text('Processing...');
+        btn.prop('disabled', true).text('Processing...').addClass('umm-loading');
         msg.html('');
 
         var data = form.serialize();
@@ -33,7 +33,10 @@ jQuery(document).ready(function($) {
             } else {
                 msg.html('<div class="mycred-isp-error">' + response.data.message + '</div>');
             }
-            btn.prop('disabled', false).text('Redeem Points');
+            btn.prop('disabled', false).text('Redeem Points').removeClass('umm-loading');
+        }).fail(function() {
+            msg.html('<div class="mycred-isp-error">An error occurred. Please try again.</div>');
+            btn.prop('disabled', false).text('Redeem Points').removeClass('umm-loading');
         });
     });
 
