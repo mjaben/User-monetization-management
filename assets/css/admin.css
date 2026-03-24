@@ -1,0 +1,476 @@
+/**
+ * UMM Admin – Withdrawal Dashboard
+ * Dark, modern design inspired by finance dashboards.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ─── Tokens ─────────────────────────────────────────────────────── */
+:root {
+    --a-bg:        #0f172a;
+    --a-surface:   #1e293b;
+    --a-surface2:  #273548;
+    --a-border:    #334155;
+    --a-text:      #f1f5f9;
+    --a-muted:     #94a3b8;
+    --a-blue:      #6366f1;
+    --a-blue-l:    #818cf8;
+    --a-purple:    #a855f7;
+    --a-green:     #10b981;
+    --a-amber:     #f59e0b;
+    --a-red:       #ef4444;
+    --a-cyan:      #06b6d4;
+    --a-grad1:     linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --a-grad2:     linear-gradient(135deg, #06b6d4 0%, #6366f1 100%);
+    --a-ease:      cubic-bezier(0.4, 0, 0.2, 1);
+    --a-r:         0.75rem;
+    --a-r-sm:      0.5rem;
+}
+
+/* ─── Wrapper ─────────────────────────────────────────────────────── */
+.umm-admin-wrap {
+    font-family: 'Inter', -apple-system, sans-serif !important;
+    background: var(--a-bg);
+    min-height: 100vh;
+    padding: 1.5rem 2rem 3rem !important;
+    margin-right: 0 !important;
+    color: var(--a-text);
+}
+
+.umm-admin-wrap * { box-sizing: border-box; }
+
+.umm-page-title {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 1.625rem !important;
+    font-weight: 800 !important;
+    color: var(--a-text) !important;
+    margin: 0 0 1.5rem !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.umm-page-title .dashicons {
+    color: var(--a-blue-l);
+    font-size: 1.75rem;
+    width: 1.75rem;
+    height: 1.75rem;
+}
+
+/* ─── Nav tabs ───────────────────────────────────────────────────── */
+.umm-nav-tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 2px solid var(--a-border);
+    margin-bottom: 2rem;
+}
+
+.umm-tab {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--a-muted);
+    border-bottom: 2px solid transparent;
+    text-decoration: none !important;
+    transition: all 0.2s var(--a-ease);
+    margin-bottom: -2px;
+    border-radius: var(--a-r-sm) var(--a-r-sm) 0 0;
+}
+
+.umm-tab:hover  { color: var(--a-text); }
+.umm-tab.is-active {
+    color: var(--a-blue-l);
+    border-bottom-color: var(--a-blue-l);
+    background: rgba(99,102,241,.08);
+}
+
+/* ─── Settings form ──────────────────────────────────────────────── */
+.umm-settings-form { margin-top: 1rem; }
+.umm-settings-form .form-table th { color: var(--a-text); }
+.umm-settings-form .form-table td,
+.umm-settings-form p,
+.umm-settings-form label,
+.umm-settings-form .description { color: var(--a-muted); }
+.umm-settings-form h2 { color: var(--a-text) !important; border-color: var(--a-border) !important; }
+
+/* ─── Dashboard grid ─────────────────────────────────────────────── */
+.umm-dashboard { display: flex; flex-direction: column; gap: 1.75rem; }
+
+/* ─── Stat cards ──────────────────────────────────────────────────── */
+.umm-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+@media (max-width: 780px) { .umm-stat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .umm-stat-grid { grid-template-columns: 1fr; } }
+
+.umm-stat-card {
+    background: var(--a-surface);
+    border: 1px solid var(--a-border);
+    border-radius: var(--a-r);
+    padding: 1.25rem 1rem 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s var(--a-ease), box-shadow 0.2s var(--a-ease);
+}
+
+.umm-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: var(--a-r) var(--a-r) 0 0;
+}
+
+.umm-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,.35);
+}
+
+.umm-stat-airtime::before       { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+.umm-stat-bank::before          { background: linear-gradient(90deg, #06b6d4, #6366f1); }
+.umm-stat-total-approved::before{ background: linear-gradient(90deg, #10b981, #06b6d4); }
+.umm-stat-pending::before       { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+.umm-stat-rejected::before      { background: linear-gradient(90deg, #ef4444, #be185d); }
+.umm-stat-all-time::before      { background: linear-gradient(90deg, #8b5cf6, #ec4899); }
+
+.umm-stat-icon {
+    font-size: 1.875rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.umm-stat-body { min-width: 0; }
+
+.umm-stat-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--a-muted);
+    margin-bottom: 0.25rem;
+}
+
+.umm-stat-value {
+    font-size: 1.875rem;
+    font-weight: 800;
+    color: var(--a-text);
+    line-height: 1.1;
+    margin-bottom: 0.2rem;
+}
+
+.umm-stat-sub {
+    font-size: 0.75rem;
+    color: var(--a-muted);
+    font-weight: 500;
+}
+
+/* ─── Charts ─────────────────────────────────────────────────────── */
+.umm-chart-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1.25rem;
+}
+
+@media (max-width: 900px) { .umm-chart-grid { grid-template-columns: 1fr; } }
+
+.umm-chart-card {
+    background: var(--a-surface);
+    border: 1px solid var(--a-border);
+    border-radius: var(--a-r);
+    padding: 1.5rem;
+}
+
+.umm-chart-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.umm-chart-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--a-text) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+}
+
+.umm-chart-sub {
+    font-size: 0.8125rem;
+    color: var(--a-muted);
+}
+
+.umm-chart-body { position: relative; }
+
+.umm-chart-donut-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.umm-donut-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--a-muted);
+}
+
+.umm-legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.umm-dot-airtime { background: #6366f1; }
+.umm-dot-bank    { background: #06b6d4; }
+
+/* ─── Toolbar ────────────────────────────────────────────────────── */
+.umm-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.umm-filter-pills {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    background: var(--a-surface);
+    border: 1px solid var(--a-border);
+    border-radius: var(--a-r);
+    padding: 0.375rem;
+}
+
+.umm-pill {
+    padding: 0.4375rem 1rem;
+    border-radius: calc(var(--a-r) - 2px);
+    border: none;
+    background: transparent;
+    color: var(--a-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s var(--a-ease);
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: inherit;
+}
+
+.umm-pill:hover { color: var(--a-text); background: var(--a-surface2); }
+
+.umm-pill.is-active {
+    background: var(--a-blue);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(99,102,241,.4);
+}
+
+.umm-pill-count {
+    background: rgba(255,255,255,.2);
+    border-radius: 9999px;
+    padding: 0.05rem 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: none;
+}
+
+.umm-pill.is-active .umm-pill-count { display: inline; }
+
+.umm-btn-danger {
+    padding: 0.5625rem 1.125rem;
+    background: rgba(239,68,68,.12);
+    border: 1px solid rgba(239,68,68,.3);
+    color: #fca5a5;
+    border-radius: var(--a-r-sm);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s var(--a-ease);
+    font-family: inherit;
+}
+
+.umm-btn-danger:hover {
+    background: rgba(239,68,68,.22);
+    border-color: rgba(239,68,68,.5);
+    color: #fff;
+}
+
+/* ─── Table ──────────────────────────────────────────────────────── */
+.umm-table-card {
+    background: var(--a-surface);
+    border: 1px solid var(--a-border);
+    border-radius: var(--a-r);
+    overflow: hidden;
+}
+
+.umm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: var(--a-text);
+}
+
+.umm-table thead tr {
+    background: var(--a-surface2);
+    border-bottom: 1px solid var(--a-border);
+}
+
+.umm-table th {
+    padding: 0.9rem 1rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--a-muted);
+}
+
+.umm-table tbody tr {
+    border-bottom: 1px solid var(--a-border);
+    transition: background 0.15s var(--a-ease);
+}
+
+.umm-table tbody tr:last-child { border-bottom: none; }
+.umm-table tbody tr:hover { background: rgba(99,102,241,.06); }
+
+.umm-table td {
+    padding: 0.875rem 1rem;
+    vertical-align: middle;
+    color: var(--a-text);
+}
+
+/* Columns */
+.umm-td-id    { color: var(--a-muted); font-weight: 600; width: 56px; }
+.umm-td-date  { color: var(--a-muted); font-size: 0.8125rem; white-space: nowrap; }
+.umm-td-amount { white-space: nowrap; }
+.umm-td-amount strong { font-weight: 700; color: var(--a-text); }
+.umm-td-amount small  { color: var(--a-muted); font-weight: 500; }
+.umm-td-details { font-size: 0.875rem; color: var(--a-muted); }
+.umm-td-details em { font-style: normal; color: var(--a-blue-l); }
+.umm-td-actions { width: 90px; }
+
+/* Avatar */
+.umm-user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.umm-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--a-grad1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6875rem;
+    font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.025em;
+}
+
+/* Method badge */
+.umm-method-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.umm-method-isp  { background: rgba(99,102,241,.15); color: var(--a-blue-l); }
+.umm-method-bank { background: rgba(6,182,212,.15);  color: var(--a-cyan); }
+
+/* Status badges */
+.umm-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.umm-badge-pending  { background: rgba(245,158,11,.15);  color: var(--a-amber); }
+.umm-badge-approved { background: rgba(16,185,129,.15);  color: var(--a-green); }
+.umm-badge-rejected { background: rgba(239,68,68,.15);   color: var(--a-red); }
+
+/* Action buttons */
+.umm-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--a-r-sm);
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none !important;
+    transition: all 0.18s var(--a-ease);
+    line-height: 1;
+}
+
+.umm-approve-btn { background: rgba(16,185,129,.15); color: var(--a-green); }
+.umm-reject-btn  { background: rgba(239,68,68,.15);  color: var(--a-red); margin-left: 4px; }
+
+.umm-approve-btn:hover { background: var(--a-green); color: #fff !important; }
+.umm-reject-btn:hover  { background: var(--a-red);   color: #fff !important; }
+
+.umm-action-done { color: var(--a-border); font-weight: 600; padding-left: 0.5rem; }
+
+/* Empty state */
+.umm-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    color: var(--a-muted);
+    text-align: center;
+}
+
+.umm-empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    opacity: .6;
+}
+
+.umm-empty p {
+    font-size: 1rem;
+    margin: 0;
+    color: var(--a-muted);
+}
+
+/* Notices inside our wrap */
+.umm-admin-wrap .notice {
+    margin: 0 0 1.5rem;
+    border-radius: var(--a-r-sm) !important;
+    border-left-width: 4px !important;
+}
+
+/* Responsive table */
+@media (max-width: 960px) {
+    .umm-td-details,
+    .umm-td-date   { display: none; }
+}
