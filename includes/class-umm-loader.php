@@ -12,6 +12,7 @@ class UMM_Loader {
         require_once UMM_PATH . 'includes/class-umm-admin.php';
         require_once UMM_PATH . 'includes/class-umm-rewards.php';
         require_once UMM_PATH . 'includes/class-umm-withdrawal.php';
+        require_once UMM_PATH . 'includes/class-umm-referrals.php';
     }
 
     private function define_admin_hooks() {
@@ -21,5 +22,6 @@ class UMM_Loader {
     private function define_public_hooks() {
         $plugin_rewards = new UMM_Rewards();
         $plugin_withdrawal = new UMM_Withdrawal();
+        $plugin_referrals = new UMM_Referrals();
     }
 }
