@@ -18,7 +18,7 @@ class UMM_Rewards {
 
         // Get settings
         $options = get_option('fc_mycred_settings', []);
-        $points  = !empty($options['post_points']) ? intval($options['post_points']) : 10;
+        $points  = !empty($options['post_points']) ? floatval($options['post_points']) : 10;
         $label   = !empty($options['post_label']) ? sanitize_text_field($options['post_label']) : __('Post', 'user-monetization-manager');
 
         // Check if already awarded
@@ -57,7 +57,7 @@ class UMM_Rewards {
 
         // Get settings
         $options = get_option('fc_mycred_settings', []);
-        $points  = !empty($options['comment_points']) ? intval($options['comment_points']) : 5;
+        $points  = !empty($options['comment_points']) ? floatval($options['comment_points']) : 5;
         $label   = !empty($options['comment_label']) ? sanitize_text_field($options['comment_label']) : __('Comment', 'user-monetization-manager');
 
         // Check if already awarded

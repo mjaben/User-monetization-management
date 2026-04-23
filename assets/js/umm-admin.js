@@ -18,11 +18,11 @@
         new Chart($donut, {
             type: 'doughnut',
             data: {
-                labels: [cfg.i18n.airtime, cfg.i18n.bank],
+                labels: [cfg.i18n.airtime, cfg.i18n.bank, cfg.i18n.data],
                 datasets: [{
-                    data: [cfg.airtimeCount, cfg.bankCount],
-                    backgroundColor: ['#6366f1', '#06b6d4'],
-                    borderColor:     ['#1e293b', '#1e293b'],
+                    data: [cfg.airtimeCount, cfg.bankCount, cfg.dataCount],
+                    backgroundColor: ['#6366f1', '#06b6d4', '#10b981'],
+                    borderColor:     ['#1e293b', '#1e293b', '#1e293b'],
                     borderWidth: 3,
                     hoverOffset: 6,
                 }],

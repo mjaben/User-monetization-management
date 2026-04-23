@@ -1,0 +1,191 @@
+<?php
+
+namespace FluentCommunity\Modules\Integrations\FluentCRM;
+
+use FluentCommunity\Modules\Course\Model\Course;
+use FluentCommunity\Modules\Course\Model\CourseTopic;
+use FluentCrm\App\Services\Funnel\BaseTrigger;
+use FluentCrm\App\Services\Funnel\FunnelHelper;
+use FluentCrm\App\Services\Funnel\FunnelProcessor;
+use FluentCrm\Framework\Support\Arr;
+
+class LessonCompletedTrigger extends BaseTrigger
+{
+    public function __construct()
+    {
+        $this->triggerName = 'fluent_community/course/lesson_completed';
+        $this->priority = 50;
+        $this->actionArgNum = 2;
+        parent::__construct();
+    }
+
+    public function getTrigger()
+    {
+        return [
+            'category'    => __('Community', 'fluent-community'),
+            'label'       => __('Lesson Completed', 'fluent-community'),
+	        'icon'        => 'fc-icon-wp_new_user_signup',
+            'description' => __('This funnel runs when a student completes a lesson', 'fluent-community'),
+            'svg_icon' => '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="16" height="14" rx="3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="7" y1="9" x2="15" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="7" y1="12" x2="13" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="18" r="4" fill="currentColor"/><path d="M16.5 18l1.3 1.3L20 17" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        ];
+    }
+
+    public function getFunnelSettingsDefaults()
+    {
+        return [
+            'subscription_status' => 'subscribed'
+        ];
+    }
+
+    public function getSettingsFields($funnel)
+    {
+        return [
+            'title'     => __('Student completes a Lesson in FluentCommunity', 'fluent-community'),
+            'sub_title' => __('This Funnel will start when a student completes a lesson', 'fluent-community'),
+            'fields'    => [
+                'subscription_status' => [
+                    'type'        => 'option_selectors',
+                    'option_key'  => 'editable_statuses',
+                    'is_multiple' => false,
+                    'label'       => __('Subscription Status', 'fluent-community'),
+                    'placeholder' => __('Select Status', 'fluent-community')
+                ],
+                'subscription_status_info' => [
+                    'type' => 'html',
+                    'info' => '<b>'.__('An Automated double-opt-in email will be sent for new subscribers', 'fluent-community').'</b>',
+                    'dependency'  => [
+                        'depends_on'    => 'subscription_status',
+                        'operator' => '=',
+                        'value'    => 'pending'
+                    ]
+                ]
+            ]
+        ];
+    }
+
+    public function getFunnelConditionDefaults($funnel)
+    {
+        return [
+            'update_type'   => 'update', // skip_all_actions, skip_update_if_exist
+            'lesson_ids'    => []
+        ];
+    }
+
+    public function getConditionFields($funnel)
+    {
+        return [
+            'update_type'   => [
+                'type'    => 'radio',
+                'label'   => __('If Contact Already Exists?', 'fluent-community'),
+                'help'    => __('Please specify what will happen if the subscriber already exists in the database', 'fluent-community'),
+                'options' => FunnelHelper::getUpdateOptions()
+            ],
+            'lesson_ids'    => [
+                'type'        => 'grouped-select',
+                'label'       => __('Target Lessons', 'fluent-community'),
+                'help'        => __('Select which lessons this automation will run for', 'fluent-community'),
+                'options'     => $this->getLessonsByCourseGroup(),
+                'is_multiple' => true,
+                'inline_help' => __('Keep it blank to run on any lesson', 'fluent-community')
+            ],
+            'run_multiple'       => [
+                'type'        => 'yes_no_check',
+                'label'       => '',
+                'check_label' => __('Restart the Automation Multiple times for a contact for this event. (Only enable if you want to restart automation for the same contact)', 'fluent-community'),
+                'inline_help' => __('If you enable, it will restart the automation for a contact if the contact is already in the automation. Otherwise, it will skip if it already exists.', 'fluent-community')
+            ]
+        ];
+    }
+
+    public function handle($funnel, $originalArgs)
+    {
+        $userId = $originalArgs[1];
+        $lesson = $originalArgs[0];
+
+        $subscriberData = FunnelHelper::prepareUserData($userId);
+
+        $subscriberData['source'] = 'fluent-community';
+
+        if (empty($subscriberData['email'])) {
+            return;
+        }
+
+        $willProcess = $this->isProcessable($funnel, $lesson->id, $subscriberData);
+
+        $willProcess = apply_filters('fluentcrm_funnel_will_process_' . $this->triggerName, $willProcess, $funnel, $subscriberData, $originalArgs);
+        if (!$willProcess) {
+            return;
+        }
+
+        $subscriberData = wp_parse_args($subscriberData, $funnel->settings);
+
+        $subscriberData['status'] = $subscriberData['subscription_status'];
+        unset($subscriberData['subscription_status']);
+
+        (new FunnelProcessor())->startFunnelSequence($funnel, $subscriberData, [
+            'source_trigger_name' => $this->triggerName,
+            'source_ref_id' => $lesson->id
+        ]);
+
+    }
+
+    private function isProcessable($funnel, $lessonId, $subscriberData)
+    {
+        $conditions = $funnel->conditions;
+        // check update_type
+        $updateType = Arr::get($conditions, 'update_type');
+
+        $subscriber = FunnelHelper::getSubscriber($subscriberData['email']);
+        if ($subscriber && $updateType == 'skip_all_if_exist') {
+            return false;
+        }
+
+        // check the products ids
+        if ($conditions['lesson_ids']) {
+            return in_array($lessonId, $conditions['lesson_ids']);
+        }
+
+        // check run_only_one
+        if ($subscriber && FunnelHelper::ifAlreadyInFunnel($funnel->id, $subscriber->id)) {
+            $multipleRun = Arr::get($conditions, 'run_multiple') == 'yes';
+            if ($multipleRun) {
+                FunnelHelper::removeSubscribersFromFunnel($funnel->id, [$subscriber->id]);
+            } else {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function getLessonsByCourseGroup()
+    {
+        $courses = Course::query()->orderBy('title', 'ASC')->get();
+
+        $groups = [];
+        foreach ($courses as $course) {
+            $group = [
+                'title'   => $course->title,
+                'slug'    => $course->slug,
+                'options' => []
+            ];
+
+            $sections = CourseTopic::where('space_id', $course->id)
+                ->orderBy('priority', 'ASC')
+                ->with(['lessons'])
+                ->get();
+
+
+            foreach ($sections as $section) {
+                foreach ($section->lessons as $lesson) {
+                    $group['options'][] = [
+                        'id' => (string) $lesson->id,
+                        'title' => $section->title .': '.$lesson->title
+                    ];
+                }
+            }
+            $groups[] = $group;
+        }
+        return $groups;
+    }
+}
