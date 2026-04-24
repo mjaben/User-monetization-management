@@ -58,7 +58,8 @@ class UMM_Withdrawal {
         $withdrawal_opts    = UMM_Admin::get_withdrawal_options();
         $airtime_enabled    = $withdrawal_opts['airtime'];
         $bank_enabled       = $withdrawal_opts['bank'];
-        $any_method_enabled = $airtime_enabled || $bank_enabled;
+        $data_enabled       = $withdrawal_opts['data'];
+        $any_method_enabled = $airtime_enabled || $bank_enabled || $data_enabled;
 
         ob_start(); ?>
         <div class="mycred-isp-withdrawal-form">
@@ -108,6 +109,8 @@ class UMM_Withdrawal {
                                     <?php 
                                     if ($pending_request->withdrawal_method === 'isp') {
                                         echo esc_html(strtoupper($pending_request->isp ?? 'N/A')) . ' ' . __('Airtime', 'user-monetization-manager');
+                                    } elseif ($pending_request->withdrawal_method === 'data') {
+                                        echo esc_html(strtoupper($pending_request->isp ?? 'N/A')) . ' ' . __('Internet Data', 'user-monetization-manager');
                                     } else {
                                         echo esc_html(ucfirst($pending_request->bank_name ?? 'N/A')) . ' ' . __('Bank', 'user-monetization-manager');
                                     }
@@ -184,6 +187,9 @@ class UMM_Withdrawal {
                                 <?php if ( $airtime_enabled ) : ?>
                                     <option value="isp"><?php _e('Airtime Top-up', 'user-monetization-manager'); ?></option>
                                 <?php endif; ?>
+                                <?php if ( $data_enabled ) : ?>
+                                    <option value="data"><?php _e('Internet Data', 'user-monetization-manager'); ?></option>
+                                <?php endif; ?>
                                 <?php if ( $bank_enabled ) : ?>
                                     <option value="bank"><?php _e('Direct Deposit', 'user-monetization-manager'); ?></option>
                                 <?php endif; ?>
@@ -192,7 +198,7 @@ class UMM_Withdrawal {
 
                         <?php if ( $airtime_enabled ) : ?>
                         <!-- Airtime Top-up Method -->
-                        <div id="umm-method-isp" class="umm-method-group" <?php echo ( ! $bank_enabled ) ? '' : ''; ?>>
+                        <div id="umm-method-isp" class="umm-method-group">
                             <div class="umm-form-group">
                                 <label for="umm-phone"><?php _e('Phone Number', 'user-monetization-manager'); ?></label>
                                 <input type="text" id="umm-phone" name="phone" placeholder="e.g. 08012345678">
@@ -200,6 +206,25 @@ class UMM_Withdrawal {
                             <div class="umm-form-group">
                                 <label for="umm-isp"><?php _e('Network Provider', 'user-monetization-manager'); ?></label>
                                 <select id="umm-isp" name="isp">
+                                    <option value="mtn">MTN Nigeria</option>
+                                    <option value="airtel">Airtel Nigeria</option>
+                                    <option value="glo">Glo Mobile</option>
+                                    <option value="9mobile">9mobile</option>
+                                </select>
+                            </div>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if ( $data_enabled ) : ?>
+                        <!-- Internet Data Method -->
+                        <div id="umm-method-data" class="umm-method-group" style="display:none;">
+                            <div class="umm-form-group">
+                                <label for="umm-data-phone"><?php _e('Phone Number', 'user-monetization-manager'); ?></label>
+                                <input type="text" id="umm-data-phone" name="data_phone" placeholder="e.g. 08012345678">
+                            </div>
+                            <div class="umm-form-group">
+                                <label for="umm-data-isp"><?php _e('Network Provider', 'user-monetization-manager'); ?></label>
+                                <select id="umm-data-isp" name="data_isp">
                                     <option value="mtn">MTN Nigeria</option>
                                     <option value="airtel">Airtel Nigeria</option>
                                     <option value="glo">Glo Mobile</option>
@@ -269,6 +294,9 @@ class UMM_Withdrawal {
         if ( $method === 'isp' && ! $withdrawal_opts['airtime'] ) {
             wp_send_json_error(['message' => __('Airtime Top-up withdrawals are currently disabled.', 'user-monetization-manager')]);
         }
+        if ( $method === 'data' && ! $withdrawal_opts['data'] ) {
+            wp_send_json_error(['message' => __('Internet Data withdrawals are currently disabled.', 'user-monetization-manager')]);
+        }
         if ( $method === 'bank' && ! $withdrawal_opts['bank'] ) {
             wp_send_json_error(['message' => __('Direct Deposit withdrawals are currently disabled.', 'user-monetization-manager')]);
         }
@@ -292,6 +320,13 @@ class UMM_Withdrawal {
         if ( $method === 'isp' ) {
             $phone = sanitize_text_field( $_POST['phone'] ?? '' );
             $isp   = sanitize_text_field( $_POST['isp'] ?? '' );
+            if ( empty($phone) ) wp_send_json_error(['message' => __('Phone number is required.', 'user-monetization-manager')]);
+            
+            $data['phone'] = $phone;
+            $data['isp']   = $isp;
+        } elseif ( $method === 'data' ) {
+            $phone = sanitize_text_field( $_POST['data_phone'] ?? '' );
+            $isp   = sanitize_text_field( $_POST['data_isp'] ?? '' );
             if ( empty($phone) ) wp_send_json_error(['message' => __('Phone number is required.', 'user-monetization-manager')]);
             
             $data['phone'] = $phone;
@@ -335,7 +370,7 @@ class UMM_Withdrawal {
 
         $user        = get_userdata( $data['user_id'] );
         $user_name   = $user ? $user->display_name . ' (' . $user->user_email . ')' : 'User #' . $data['user_id'];
-        $method      = $data['withdrawal_method'] === 'bank' ? __( 'Direct Deposit', 'user-monetization-manager' ) : __( 'Airtime Top-up', 'user-monetization-manager' );
+        $method      = $data['withdrawal_method'] === 'bank' ? __( 'Direct Deposit', 'user-monetization-manager' ) : ( $data['withdrawal_method'] === 'data' ? __( 'Internet Data', 'user-monetization-manager' ) : __( 'Airtime Top-up', 'user-monetization-manager' ) );
         $details     = $data['withdrawal_method'] === 'bank'
             ? sprintf( __( 'Account: %s | Bank: %s', 'user-monetization-manager' ), $data['account_number'] ?? '', ucfirst( $data['bank_name'] ?? '' ) )
             : sprintf( __( 'Phone: %s | Network: %s', 'user-monetization-manager' ), $data['phone'] ?? '', strtoupper( $data['isp'] ?? '' ) );

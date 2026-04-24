@@ -67,6 +67,7 @@ class UMM_Admin {
             ['min_withdrawal_threshold', __( 'Minimum Withdrawal Threshold', 'user-monetization-manager' ), [$this,'field_min_threshold']],
             ['enable_airtime_withdrawal', __( 'Enable Airtime Top-up',       'user-monetization-manager' ), [$this,'field_enable_airtime']],
             ['enable_bank_withdrawal',   __( 'Enable Direct Deposit (Bank)', 'user-monetization-manager' ), [$this,'field_enable_bank']],
+            ['enable_data_withdrawal',   __( 'Enable Internet Data',         'user-monetization-manager' ), [$this,'field_enable_data']],
             ['manager_emails',           __( 'Manager Alert Emails',         'user-monetization-manager' ), [$this,'field_manager_emails']],
         ] as [$id, $label, $cb] ) {
             add_settings_field( $id, $label, $cb, self::PAGE_SLUG, 'umm_withdrawal_settings' );
@@ -77,19 +78,20 @@ class UMM_Admin {
         $output   = [];
         $defaults = $this->get_defaults();
 
-        $output['post_points'] = max( 0, (int) ( $input['post_points'] ?? $defaults['post_points'] ) );
+        $output['post_points'] = max( 0, (float) ( $input['post_points'] ?? $defaults['post_points'] ) );
         $output['post_label']  = sanitize_text_field( $input['post_label'] ?? '' ) ?: $defaults['post_label'];
 
-        $output['comment_points'] = max( 0, (int) ( $input['comment_points'] ?? $defaults['comment_points'] ) );
+        $output['comment_points'] = max( 0, (float) ( $input['comment_points'] ?? $defaults['comment_points'] ) );
         $output['comment_label']  = sanitize_text_field( $input['comment_label'] ?? '' ) ?: $defaults['comment_label'];
 
         $output['enable_referrals']       = isset( $input['enable_referrals'] ) ? 1 : 0;
-        $output['referral_visit_points']  = max( 0, (int) ( $input['referral_visit_points'] ?? $defaults['referral_visit_points'] ) );
-        $output['referral_signup_points'] = max( 0, (int) ( $input['referral_signup_points'] ?? $defaults['referral_signup_points'] ) );
+        $output['referral_visit_points']  = max( 0, (float) ( $input['referral_visit_points'] ?? $defaults['referral_visit_points'] ) );
+        $output['referral_signup_points'] = max( 0, (float) ( $input['referral_signup_points'] ?? $defaults['referral_signup_points'] ) );
 
-        $output['min_withdrawal_threshold']  = max( 0, (int) ( $input['min_withdrawal_threshold'] ?? $defaults['min_withdrawal_threshold'] ) );
+        $output['min_withdrawal_threshold']  = max( 0, (float) ( $input['min_withdrawal_threshold'] ?? $defaults['min_withdrawal_threshold'] ) );
         $output['enable_airtime_withdrawal'] = isset( $input['enable_airtime_withdrawal'] ) ? 1 : 0;
         $output['enable_bank_withdrawal']    = isset( $input['enable_bank_withdrawal'] ) ? 1 : 0;
+        $output['enable_data_withdrawal']    = isset( $input['enable_data_withdrawal'] ) ? 1 : 0;
 
         // Manager emails — sanitize each address individually
         $raw_emails = sanitize_textarea_field( $input['manager_emails'] ?? '' );
@@ -103,7 +105,7 @@ class UMM_Admin {
     /* ── Field renderers ────────────────────────────────────────── */
     public function field_post_points() {
         $o = $this->get_options();
-        printf( '<input type="number" class="small-text" name="%s[post_points]" value="%d" min="0" />', esc_attr( self::OPTION_KEY ), (int) $o['post_points'] );
+        printf( '<input type="number" step="0.01" class="small-text" name="%s[post_points]" value="%s" min="0" />', esc_attr( self::OPTION_KEY ), esc_attr( (float) $o['post_points'] ) );
         echo '<p class="description">' . esc_html__( 'Points awarded when a user creates a community post.', 'user-monetization-manager' ) . '</p>';
     }
 
@@ -115,7 +117,7 @@ class UMM_Admin {
 
     public function field_comment_points() {
         $o = $this->get_options();
-        printf( '<input type="number" class="small-text" name="%s[comment_points]" value="%d" min="0" />', esc_attr( self::OPTION_KEY ), (int) $o['comment_points'] );
+        printf( '<input type="number" step="0.01" class="small-text" name="%s[comment_points]" value="%s" min="0" />', esc_attr( self::OPTION_KEY ), esc_attr( (float) $o['comment_points'] ) );
         echo '<p class="description">' . esc_html__( 'Points awarded when a user comments in the community.', 'user-monetization-manager' ) . '</p>';
     }
 
@@ -135,19 +137,19 @@ class UMM_Admin {
 
     public function field_referral_visit_points() {
         $o = $this->get_options();
-        printf( '<input type="number" class="small-text" name="%s[referral_visit_points]" value="%d" min="0" />', esc_attr( self::OPTION_KEY ), (int) $o['referral_visit_points'] );
+        printf( '<input type="number" step="0.01" class="small-text" name="%s[referral_visit_points]" value="%s" min="0" />', esc_attr( self::OPTION_KEY ), esc_attr( (float) $o['referral_visit_points'] ) );
         echo '<p class="description">' . esc_html__( 'Points awarded for each unique visitor referred. Set to 0 to disable.', 'user-monetization-manager' ) . '</p>';
     }
 
     public function field_referral_signup_points() {
         $o = $this->get_options();
-        printf( '<input type="number" class="small-text" name="%s[referral_signup_points]" value="%d" min="0" />', esc_attr( self::OPTION_KEY ), (int) $o['referral_signup_points'] );
+        printf( '<input type="number" step="0.01" class="small-text" name="%s[referral_signup_points]" value="%s" min="0" />', esc_attr( self::OPTION_KEY ), esc_attr( (float) $o['referral_signup_points'] ) );
         echo '<p class="description">' . esc_html__( 'Points awarded when a referred user successfully signs up. Set to 0 to disable.', 'user-monetization-manager' ) . '</p>';
     }
 
     public function field_min_threshold() {
         $o = $this->get_options();
-        printf( '<input type="number" class="small-text" name="%s[min_withdrawal_threshold]" value="%d" min="0" />', esc_attr( self::OPTION_KEY ), (int) $o['min_withdrawal_threshold'] );
+        printf( '<input type="number" step="0.01" class="small-text" name="%s[min_withdrawal_threshold]" value="%s" min="0" />', esc_attr( self::OPTION_KEY ), esc_attr( (float) $o['min_withdrawal_threshold'] ) );
         echo '<p class="description">' . esc_html__( 'Minimum points required before users can withdraw. Set to 0 for no minimum.', 'user-monetization-manager' ) . '</p>';
     }
 
@@ -165,6 +167,14 @@ class UMM_Admin {
             esc_attr( self::OPTION_KEY ), checked( 1, (int) $o['enable_bank_withdrawal'], false ),
             esc_html__( 'Allow users to redeem points via direct bank deposit', 'user-monetization-manager' ) );
         echo '<p class="description">' . esc_html__( 'When disabled, Direct Deposit is hidden from the withdrawal form.', 'user-monetization-manager' ) . '</p>';
+    }
+
+    public function field_enable_data() {
+        $o = $this->get_options();
+        printf( '<label><input type="checkbox" name="%s[enable_data_withdrawal]" value="1" %s /> %s</label>',
+            esc_attr( self::OPTION_KEY ), checked( 1, (int) $o['enable_data_withdrawal'], false ),
+            esc_html__( 'Allow users to redeem points for internet data', 'user-monetization-manager' ) );
+        echo '<p class="description">' . esc_html__( 'When disabled, Internet Data is hidden from the withdrawal form.', 'user-monetization-manager' ) . '</p>';
     }
 
     public function field_manager_emails() {
@@ -294,12 +304,21 @@ class UMM_Admin {
                     </div>
                 </div>
 
+                <div class="umm-stat-card umm-stat-data">
+                    <div class="umm-stat-icon">📶</div>
+                    <div class="umm-stat-body">
+                        <div class="umm-stat-label"><?php esc_html_e( 'Data Approved', 'user-monetization-manager' ); ?></div>
+                        <div class="umm-stat-value"><?php echo number_format( $stats['data_count'] ); ?></div>
+                        <div class="umm-stat-sub"><?php printf( esc_html__( '%s pts total', 'user-monetization-manager' ), number_format( $stats['data_total'], 2 ) ); ?></div>
+                    </div>
+                </div>
+
                 <div class="umm-stat-card umm-stat-total-approved">
                     <div class="umm-stat-icon">✅</div>
                     <div class="umm-stat-body">
                         <div class="umm-stat-label"><?php esc_html_e( 'Total Approved', 'user-monetization-manager' ); ?></div>
-                        <div class="umm-stat-value"><?php echo number_format( $stats['airtime_count'] + $stats['bank_count'] ); ?></div>
-                        <div class="umm-stat-sub"><?php printf( esc_html__( '%s pts total', 'user-monetization-manager' ), number_format( $stats['airtime_total'] + $stats['bank_total'], 2 ) ); ?></div>
+                        <div class="umm-stat-value"><?php echo number_format( $stats['airtime_count'] + $stats['bank_count'] + $stats['data_count'] ); ?></div>
+                        <div class="umm-stat-sub"><?php printf( esc_html__( '%s pts total', 'user-monetization-manager' ), number_format( $stats['airtime_total'] + $stats['bank_total'] + $stats['data_total'], 2 ) ); ?></div>
                     </div>
                 </div>
 
@@ -346,6 +365,8 @@ class UMM_Admin {
                             <span class="umm-legend-dot umm-dot-airtime"></span><?php esc_html_e( 'Airtime', 'user-monetization-manager' ); ?>
                             &nbsp;&nbsp;
                             <span class="umm-legend-dot umm-dot-bank"></span><?php esc_html_e( 'Bank', 'user-monetization-manager' ); ?>
+                            &nbsp;&nbsp;
+                            <span class="umm-legend-dot umm-dot-data" style="background:#10b981; display:inline-block; width:10px; height:10px; border-radius:50%;"></span><?php esc_html_e( 'Data', 'user-monetization-manager' ); ?>
                         </div>
                     </div>
                 </div>
@@ -410,7 +431,8 @@ class UMM_Admin {
                             $username    = $user ? esc_html( $user->display_name ) : __( 'Deleted User', 'user-monetization-manager' );
                             $initials    = $user ? strtoupper( substr( $user->display_name, 0, 2 ) ) : 'DU';
                             $is_bank     = $row->withdrawal_method === 'bank';
-                            $method_label = $is_bank ? __( 'Bank', 'user-monetization-manager' ) : __( 'Airtime', 'user-monetization-manager' );
+                            $is_data     = $row->withdrawal_method === 'data';
+                            $method_label = $is_bank ? __( 'Bank', 'user-monetization-manager' ) : ( $is_data ? __( 'Data', 'user-monetization-manager' ) : __( 'Airtime', 'user-monetization-manager' ) );
                             $details     = $is_bank
                                 ? esc_html( $row->account_number ) . ' <em>(' . esc_html( ucfirst( $row->bank_name ) ) . ')</em>'
                                 : esc_html( $row->phone ) . ' <em>(' . esc_html( strtoupper( $row->isp ) ) . ')</em>';
@@ -429,7 +451,7 @@ class UMM_Admin {
                                 </td>
                                 <td>
                                     <span class="umm-method-badge umm-method-<?php echo esc_attr( $row->withdrawal_method ); ?>">
-                                        <?php echo $is_bank ? '🏦' : '📱'; ?> <?php echo esc_html( $method_label ); ?>
+                                        <?php echo $is_bank ? '🏦' : ($is_data ? '📶' : '📱'); ?> <?php echo esc_html( $method_label ); ?>
                                     </span>
                                 </td>
                                 <td class="umm-td-details"><?php echo $details; ?></td>
@@ -466,6 +488,8 @@ class UMM_Admin {
                 SUM( CASE WHEN status='approved' AND withdrawal_method='isp'  THEN amount ELSE 0 END ) AS airtime_total,
                 SUM( CASE WHEN status='approved' AND withdrawal_method='bank' THEN 1     ELSE 0 END ) AS bank_count,
                 SUM( CASE WHEN status='approved' AND withdrawal_method='bank' THEN amount ELSE 0 END ) AS bank_total,
+                SUM( CASE WHEN status='approved' AND withdrawal_method='data' THEN 1     ELSE 0 END ) AS data_count,
+                SUM( CASE WHEN status='approved' AND withdrawal_method='data' THEN amount ELSE 0 END ) AS data_total,
                 SUM( CASE WHEN status='pending'  THEN 1     ELSE 0 END ) AS pending_count,
                 SUM( CASE WHEN status='pending'  THEN amount ELSE 0 END ) AS pending_total,
                 SUM( CASE WHEN status='rejected' THEN 1     ELSE 0 END ) AS rejected_count,
@@ -478,6 +502,8 @@ class UMM_Admin {
             'airtime_total'   => (float) ( $row->airtime_total   ?? 0 ),
             'bank_count'      => (int)   ( $row->bank_count      ?? 0 ),
             'bank_total'      => (float) ( $row->bank_total      ?? 0 ),
+            'data_count'      => (int)   ( $row->data_count      ?? 0 ),
+            'data_total'      => (float) ( $row->data_total      ?? 0 ),
             'pending_count'   => (int)   ( $row->pending_count   ?? 0 ),
             'pending_total'   => (float) ( $row->pending_total   ?? 0 ),
             'rejected_count'  => (int)   ( $row->rejected_count  ?? 0 ),
@@ -557,12 +583,14 @@ class UMM_Admin {
             'chartValues'   => $monthly['values'],
             'airtimeCount'  => $stats['airtime_count'],
             'bankCount'     => $stats['bank_count'],
+            'dataCount'     => $stats['data_count'],
             'i18n'          => [
                 'confirmClear' => __( 'This will permanently delete all rejected withdrawal requests. This cannot be undone. Continue?', 'user-monetization-manager' ),
                 'cleared'      => __( 'Declined history cleared.', 'user-monetization-manager' ),
                 'error'        => __( 'An error occurred. Please try again.', 'user-monetization-manager' ),
                 'airtime'      => __( 'Airtime', 'user-monetization-manager' ),
                 'bank'         => __( 'Bank', 'user-monetization-manager' ),
+                'data'         => __( 'Data', 'user-monetization-manager' ),
             ],
         ] );
     }
@@ -580,6 +608,7 @@ class UMM_Admin {
             'min_withdrawal_threshold'  => 1000,
             'enable_airtime_withdrawal' => 1,
             'enable_bank_withdrawal'    => 1,
+            'enable_data_withdrawal'    => 1,
             'manager_emails'            => get_option( 'admin_email', '' ),
         ];
     }
@@ -593,18 +622,21 @@ class UMM_Admin {
             'min_withdrawal_threshold'  => 1000,
             'enable_airtime_withdrawal' => 1,
             'enable_bank_withdrawal'    => 1,
+            'enable_data_withdrawal'    => 1,
         ] );
-        return (int) $opts['min_withdrawal_threshold'];
+        return (float) $opts['min_withdrawal_threshold'];
     }
 
     public static function get_withdrawal_options() {
         $opts = wp_parse_args( get_option( self::OPTION_KEY, [] ), [
             'enable_airtime_withdrawal' => 1,
             'enable_bank_withdrawal'    => 1,
+            'enable_data_withdrawal'    => 1,
         ] );
         return [
             'airtime' => (bool) $opts['enable_airtime_withdrawal'],
             'bank'    => (bool) $opts['enable_bank_withdrawal'],
+            'data'    => (bool) $opts['enable_data_withdrawal'],
         ];
     }
 

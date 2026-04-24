@@ -2,7 +2,7 @@
 /**
  * Plugin Name: User Monetization Manager
  * Description: Complete solution for rewarding users via myCRED and handling withdrawals.
- * Version:     3.8 Beta 
+ * Version:     4.0
  * Author:      Matthew John Alex
  * Author URI:  https://mjaben.com
  * License:     GPL2
@@ -14,7 +14,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Define constants
-define('UMM_VERSION', '3.8');
+define('UMM_VERSION', '4.0');
 define('UMM_PATH', plugin_dir_path(__FILE__));
 define('UMM_URL', plugin_dir_url(__FILE__));
 
@@ -37,3 +37,13 @@ function run_user_monetization_manager()
     $plugin->run();
 }
 run_user_monetization_manager();
+
+// Force myCRED to accept decimal values for the default point type
+add_filter('option_mycred_pref_core', function ($value) {
+    if (is_array($value) && isset($value['format'])) {
+        if (empty($value['format']['decimals'])) {
+            $value['format']['decimals'] = 2;
+        }
+    }
+    return $value;
+});
