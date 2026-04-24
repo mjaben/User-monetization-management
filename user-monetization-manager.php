@@ -14,7 +14,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Define constants
-define('UMM_VERSION', '3.9');
+define('UMM_VERSION', '4.0');
 define('UMM_PATH', plugin_dir_path(__FILE__));
 define('UMM_URL', plugin_dir_url(__FILE__));
 
@@ -39,9 +39,9 @@ function run_user_monetization_manager()
 run_user_monetization_manager();
 
 // Force myCRED to accept decimal values for the default point type
-add_filter( 'option_mycred_pref_core', function( $value ) {
-    if ( is_array( $value ) && isset( $value['format'] ) ) {
-        if ( empty( $value['format']['decimals'] ) ) {
+add_filter('option_mycred_pref_core', function ($value) {
+    if (is_array($value) && isset($value['format'])) {
+        if (empty($value['format']['decimals'])) {
             $value['format']['decimals'] = 2;
         }
     }
