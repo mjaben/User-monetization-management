@@ -2,7 +2,7 @@
 /**
  * Plugin Name: User Monetization Manager
  * Description: Complete solution for rewarding users via myCRED and handling withdrawals.
- * Version:     4.0
+ * Version:     4.1
  * Author:      Matthew John Alex
  * Author URI:  https://mjaben.com
  * License:     GPL2
@@ -14,7 +14,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Define constants
-define('UMM_VERSION', '4.0');
+define('UMM_VERSION', '4.1');
 define('UMM_PATH', plugin_dir_path(__FILE__));
 define('UMM_URL', plugin_dir_url(__FILE__));
 

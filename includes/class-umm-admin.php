@@ -322,6 +322,24 @@ class UMM_Admin {
                     </div>
                 </div>
 
+                <div class="umm-stat-card umm-stat-current-month">
+                    <div class="umm-stat-icon">📅</div>
+                    <div class="umm-stat-body">
+                        <div class="umm-stat-label"><?php esc_html_e( 'Current Month', 'user-monetization-manager' ); ?></div>
+                        <div class="umm-stat-value"><?php echo number_format( $stats['current_month_count'] ); ?></div>
+                        <div class="umm-stat-sub"><?php printf( esc_html__( '%s pts total', 'user-monetization-manager' ), number_format( $stats['current_month_total'], 2 ) ); ?></div>
+                    </div>
+                </div>
+
+                <div class="umm-stat-card umm-stat-daily">
+                    <div class="umm-stat-icon">⚡</div>
+                    <div class="umm-stat-body">
+                        <div class="umm-stat-label"><?php esc_html_e( 'Daily Distributed', 'user-monetization-manager' ); ?></div>
+                        <div class="umm-stat-value"><?php echo number_format( $stats['daily_count'] ); ?></div>
+                        <div class="umm-stat-sub"><?php printf( esc_html__( '%s pts today', 'user-monetization-manager' ), number_format( $stats['daily_total'], 2 ) ); ?></div>
+                    </div>
+                </div>
+
                 <div class="umm-stat-card umm-stat-pending">
                     <div class="umm-stat-icon">⏳</div>
                     <div class="umm-stat-body">
@@ -493,21 +511,29 @@ class UMM_Admin {
                 SUM( CASE WHEN status='pending'  THEN 1     ELSE 0 END ) AS pending_count,
                 SUM( CASE WHEN status='pending'  THEN amount ELSE 0 END ) AS pending_total,
                 SUM( CASE WHEN status='rejected' THEN 1     ELSE 0 END ) AS rejected_count,
-                SUM( CASE WHEN status='rejected' THEN amount ELSE 0 END ) AS rejected_total
+                SUM( CASE WHEN status='rejected' THEN amount ELSE 0 END ) AS rejected_total,
+                SUM( CASE WHEN status='approved' AND MONTH(created) = MONTH(CURRENT_DATE()) AND YEAR(created) = YEAR(CURRENT_DATE()) THEN 1 ELSE 0 END ) AS current_month_count,
+                SUM( CASE WHEN status='approved' AND MONTH(created) = MONTH(CURRENT_DATE()) AND YEAR(created) = YEAR(CURRENT_DATE()) THEN amount ELSE 0 END ) AS current_month_total,
+                SUM( CASE WHEN status='approved' AND DATE(created) = CURRENT_DATE() THEN 1 ELSE 0 END ) AS daily_count,
+                SUM( CASE WHEN status='approved' AND DATE(created) = CURRENT_DATE() THEN amount ELSE 0 END ) AS daily_total
             FROM {$table}
         " );
 
         return [
-            'airtime_count'   => (int)   ( $row->airtime_count   ?? 0 ),
-            'airtime_total'   => (float) ( $row->airtime_total   ?? 0 ),
-            'bank_count'      => (int)   ( $row->bank_count      ?? 0 ),
-            'bank_total'      => (float) ( $row->bank_total      ?? 0 ),
-            'data_count'      => (int)   ( $row->data_count      ?? 0 ),
-            'data_total'      => (float) ( $row->data_total      ?? 0 ),
-            'pending_count'   => (int)   ( $row->pending_count   ?? 0 ),
-            'pending_total'   => (float) ( $row->pending_total   ?? 0 ),
-            'rejected_count'  => (int)   ( $row->rejected_count  ?? 0 ),
-            'rejected_total'  => (float) ( $row->rejected_total  ?? 0 ),
+            'airtime_count'       => (int)   ( $row->airtime_count       ?? 0 ),
+            'airtime_total'       => (float) ( $row->airtime_total       ?? 0 ),
+            'bank_count'          => (int)   ( $row->bank_count          ?? 0 ),
+            'bank_total'          => (float) ( $row->bank_total          ?? 0 ),
+            'data_count'          => (int)   ( $row->data_count          ?? 0 ),
+            'data_total'          => (float) ( $row->data_total          ?? 0 ),
+            'pending_count'       => (int)   ( $row->pending_count       ?? 0 ),
+            'pending_total'       => (float) ( $row->pending_total       ?? 0 ),
+            'rejected_count'      => (int)   ( $row->rejected_count      ?? 0 ),
+            'rejected_total'      => (float) ( $row->rejected_total      ?? 0 ),
+            'current_month_count' => (int)   ( $row->current_month_count ?? 0 ),
+            'current_month_total' => (float) ( $row->current_month_total ?? 0 ),
+            'daily_count'         => (int)   ( $row->daily_count         ?? 0 ),
+            'daily_total'         => (float) ( $row->daily_total         ?? 0 ),
         ];
     }
 
