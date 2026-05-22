@@ -41,6 +41,9 @@ class UMM_Admin {
             ['post_label',     __( 'Post Label',         'user-monetization-manager' ), [$this,'field_post_label']],
             ['comment_points', __( 'Points per Comment', 'user-monetization-manager' ), [$this,'field_comment_points']],
             ['comment_label',  __( 'Comment Label',      'user-monetization-manager' ), [$this,'field_comment_label']],
+            ['min_comment_chars',    __( 'Min Comment Characters',      'user-monetization-manager' ), [$this,'field_min_comment_chars']],
+            ['max_comments_per_hour',__( 'Max Comments per Hour',       'user-monetization-manager' ), [$this,'field_max_comments_per_hour']],
+            ['enable_strict_reply',  __( 'Enable Strict Reply Mode',    'user-monetization-manager' ), [$this,'field_enable_strict_reply']],
         ] as [$id, $label, $cb] ) {
             add_settings_field( $id, $label, $cb, self::PAGE_SLUG, 'fc_mycred_main' );
         }
@@ -84,6 +87,10 @@ class UMM_Admin {
         $output['comment_points'] = max( 0, (float) ( $input['comment_points'] ?? $defaults['comment_points'] ) );
         $output['comment_label']  = sanitize_text_field( $input['comment_label'] ?? '' ) ?: $defaults['comment_label'];
 
+        $output['min_comment_chars']     = max( 0, (int) ( $input['min_comment_chars'] ?? $defaults['min_comment_chars'] ) );
+        $output['max_comments_per_hour'] = max( 0, (int) ( $input['max_comments_per_hour'] ?? $defaults['max_comments_per_hour'] ) );
+        $output['enable_strict_reply']   = isset( $input['enable_strict_reply'] ) ? 1 : 0;
+
         $output['enable_referrals']       = isset( $input['enable_referrals'] ) ? 1 : 0;
         $output['referral_visit_points']  = max( 0, (float) ( $input['referral_visit_points'] ?? $defaults['referral_visit_points'] ) );
         $output['referral_signup_points'] = max( 0, (float) ( $input['referral_signup_points'] ?? $defaults['referral_signup_points'] ) );
@@ -125,6 +132,26 @@ class UMM_Admin {
         $o = $this->get_options();
         printf( '<input type="text" class="regular-text" name="%s[comment_label]" value="%s" />', esc_attr( self::OPTION_KEY ), esc_attr( $o['comment_label'] ) );
         echo '<p class="description">' . esc_html__( 'Label for comment awards (e.g. "Comment", "Reply").', 'user-monetization-manager' ) . '</p>';
+    }
+
+    public function field_min_comment_chars() {
+        $o = $this->get_options();
+        printf( '<input type="number" step="1" class="small-text" name="%s[min_comment_chars]" value="%s" min="0" />', esc_attr( self::OPTION_KEY ), esc_attr( (int) $o['min_comment_chars'] ) );
+        echo '<p class="description">' . esc_html__( 'Minimum character length required for a comment to be rewarded (0 to disable).', 'user-monetization-manager' ) . '</p>';
+    }
+
+    public function field_max_comments_per_hour() {
+        $o = $this->get_options();
+        printf( '<input type="number" step="1" class="small-text" name="%s[max_comments_per_hour]" value="%s" min="0" />', esc_attr( self::OPTION_KEY ), esc_attr( (int) $o['max_comments_per_hour'] ) );
+        echo '<p class="description">' . esc_html__( 'Maximum number of comments a user can be rewarded for per hour (Cooldown limit). Set to 0 to disable.', 'user-monetization-manager' ) . '</p>';
+    }
+
+    public function field_enable_strict_reply() {
+        $o = $this->get_options();
+        printf( '<label><input type="checkbox" name="%s[enable_strict_reply]" value="1" %s /> %s</label>',
+            esc_attr( self::OPTION_KEY ), checked( 1, (int) $o['enable_strict_reply'], false ),
+            esc_html__( 'Enable Strict Reply Hierarchy (Echo-Chamber Prevention)', 'user-monetization-manager' ) );
+        echo '<p class="description">' . esc_html__( 'If enabled, users will not be rewarded for replying to their own posts or comments.', 'user-monetization-manager' ) . '</p>';
     }
 
     public function field_enable_referrals() {
@@ -322,6 +349,24 @@ class UMM_Admin {
                     </div>
                 </div>
 
+                <div class="umm-stat-card umm-stat-current-month">
+                    <div class="umm-stat-icon">📅</div>
+                    <div class="umm-stat-body">
+                        <div class="umm-stat-label"><?php esc_html_e( 'Current Month', 'user-monetization-manager' ); ?></div>
+                        <div class="umm-stat-value"><?php echo number_format( $stats['current_month_count'] ); ?></div>
+                        <div class="umm-stat-sub"><?php printf( esc_html__( '%s pts total', 'user-monetization-manager' ), number_format( $stats['current_month_total'], 2 ) ); ?></div>
+                    </div>
+                </div>
+
+                <div class="umm-stat-card umm-stat-daily">
+                    <div class="umm-stat-icon">⚡</div>
+                    <div class="umm-stat-body">
+                        <div class="umm-stat-label"><?php esc_html_e( 'Daily Distributed', 'user-monetization-manager' ); ?></div>
+                        <div class="umm-stat-value"><?php echo number_format( $stats['daily_count'] ); ?></div>
+                        <div class="umm-stat-sub"><?php printf( esc_html__( '%s pts today', 'user-monetization-manager' ), number_format( $stats['daily_total'], 2 ) ); ?></div>
+                    </div>
+                </div>
+
                 <div class="umm-stat-card umm-stat-pending">
                     <div class="umm-stat-icon">⏳</div>
                     <div class="umm-stat-body">
@@ -493,21 +538,29 @@ class UMM_Admin {
                 SUM( CASE WHEN status='pending'  THEN 1     ELSE 0 END ) AS pending_count,
                 SUM( CASE WHEN status='pending'  THEN amount ELSE 0 END ) AS pending_total,
                 SUM( CASE WHEN status='rejected' THEN 1     ELSE 0 END ) AS rejected_count,
-                SUM( CASE WHEN status='rejected' THEN amount ELSE 0 END ) AS rejected_total
+                SUM( CASE WHEN status='rejected' THEN amount ELSE 0 END ) AS rejected_total,
+                SUM( CASE WHEN status='approved' AND MONTH(created) = MONTH(CURRENT_DATE()) AND YEAR(created) = YEAR(CURRENT_DATE()) THEN 1 ELSE 0 END ) AS current_month_count,
+                SUM( CASE WHEN status='approved' AND MONTH(created) = MONTH(CURRENT_DATE()) AND YEAR(created) = YEAR(CURRENT_DATE()) THEN amount ELSE 0 END ) AS current_month_total,
+                SUM( CASE WHEN status='approved' AND DATE(created) = CURRENT_DATE() THEN 1 ELSE 0 END ) AS daily_count,
+                SUM( CASE WHEN status='approved' AND DATE(created) = CURRENT_DATE() THEN amount ELSE 0 END ) AS daily_total
             FROM {$table}
         " );
 
         return [
-            'airtime_count'   => (int)   ( $row->airtime_count   ?? 0 ),
-            'airtime_total'   => (float) ( $row->airtime_total   ?? 0 ),
-            'bank_count'      => (int)   ( $row->bank_count      ?? 0 ),
-            'bank_total'      => (float) ( $row->bank_total      ?? 0 ),
-            'data_count'      => (int)   ( $row->data_count      ?? 0 ),
-            'data_total'      => (float) ( $row->data_total      ?? 0 ),
-            'pending_count'   => (int)   ( $row->pending_count   ?? 0 ),
-            'pending_total'   => (float) ( $row->pending_total   ?? 0 ),
-            'rejected_count'  => (int)   ( $row->rejected_count  ?? 0 ),
-            'rejected_total'  => (float) ( $row->rejected_total  ?? 0 ),
+            'airtime_count'       => (int)   ( $row->airtime_count       ?? 0 ),
+            'airtime_total'       => (float) ( $row->airtime_total       ?? 0 ),
+            'bank_count'          => (int)   ( $row->bank_count          ?? 0 ),
+            'bank_total'          => (float) ( $row->bank_total          ?? 0 ),
+            'data_count'          => (int)   ( $row->data_count          ?? 0 ),
+            'data_total'          => (float) ( $row->data_total          ?? 0 ),
+            'pending_count'       => (int)   ( $row->pending_count       ?? 0 ),
+            'pending_total'       => (float) ( $row->pending_total       ?? 0 ),
+            'rejected_count'      => (int)   ( $row->rejected_count      ?? 0 ),
+            'rejected_total'      => (float) ( $row->rejected_total      ?? 0 ),
+            'current_month_count' => (int)   ( $row->current_month_count ?? 0 ),
+            'current_month_total' => (float) ( $row->current_month_total ?? 0 ),
+            'daily_count'         => (int)   ( $row->daily_count         ?? 0 ),
+            'daily_total'         => (float) ( $row->daily_total         ?? 0 ),
         ];
     }
 
@@ -602,6 +655,9 @@ class UMM_Admin {
             'post_label'                => 'Post',
             'comment_points'            => 5,
             'comment_label'             => 'Comment',
+            'min_comment_chars'         => 0,
+            'max_comments_per_hour'     => 0,
+            'enable_strict_reply'       => 0,
             'enable_referrals'          => 0,
             'referral_visit_points'     => 1,
             'referral_signup_points'    => 5,
