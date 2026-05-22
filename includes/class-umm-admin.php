@@ -612,7 +612,7 @@ class UMM_Admin {
 
     /* ── Assets ─────────────────────────────────────────────────── */
     public function enqueue_assets( $hook ) {
-        if ( $hook !== 'toplevel_page_' . self::PAGE_SLUG ) return;
+        if ( empty( $_GET['page'] ) || $_GET['page'] !== self::PAGE_SLUG ) return;
 
         // Styles
         wp_enqueue_style( 'umm-admin', UMM_URL . 'assets/css/admin.css', [], UMM_VERSION );
