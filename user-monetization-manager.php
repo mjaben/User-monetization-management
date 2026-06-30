@@ -2,7 +2,7 @@
 /**
  * Plugin Name: User Monetization Manager
  * Description: Complete solution for rewarding users via myCRED and handling withdrawals.
- * Version:     2.0.1
+ * Version:     2.0.2
  * Author:      Intasela
  * Author URI:  https://intasela.com
  * License:     GPL2
@@ -14,7 +14,7 @@ if (!defined('ABSPATH'))
     exit;
 
 // Define constants
-define('UMM_VERSION', '2.0.1');
+define('UMM_VERSION', '2.0.2');
 define('UMM_PATH', plugin_dir_path(__FILE__));
 define('UMM_URL', plugin_dir_url(__FILE__));
 

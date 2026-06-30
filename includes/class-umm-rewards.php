@@ -63,9 +63,16 @@ class UMM_Rewards {
         // ── Rule 1: Character Count ──────────────────────────────────
         $min_chars = !empty($options['min_comment_chars']) ? intval($options['min_comment_chars']) : 0;
         if ($min_chars > 0) {
-            $content = is_object($comment) && isset($comment->message) ? $comment->message : ($comment['message'] ?? '');
-            $content_clean = trim(strip_tags(html_entity_decode((string)$content, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
-            if (mb_strlen($content_clean) < $min_chars) {
+            // Fluent Community stores comment text in the 'content' field (not 'message').
+            // Falling back to 'message' for forward-compatibility in case the schema changes.
+            $content = '';
+            if ( is_object( $comment ) ) {
+                $content = $comment->content ?? $comment->message ?? '';
+            } elseif ( is_array( $comment ) ) {
+                $content = $comment['content'] ?? $comment['message'] ?? '';
+            }
+            $content_clean = trim( strip_tags( html_entity_decode( (string) $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) );
+            if ( mb_strlen( $content_clean ) < $min_chars ) {
                 return; // Comment is too short
             }
         }
