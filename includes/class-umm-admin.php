@@ -44,6 +44,7 @@ class UMM_Admin {
             ['min_comment_chars',    __( 'Min Comment Characters',      'user-monetization-manager' ), [$this,'field_min_comment_chars']],
             ['max_comments_per_hour',__( 'Max Comments per Hour',       'user-monetization-manager' ), [$this,'field_max_comments_per_hour']],
             ['enable_strict_reply',  __( 'Enable Strict Reply Mode',    'user-monetization-manager' ), [$this,'field_enable_strict_reply']],
+            ['excluded_words',       __( 'Excluded Words',              'user-monetization-manager' ), [$this,'field_excluded_words']],
         ] as [$id, $label, $cb] ) {
             add_settings_field( $id, $label, $cb, self::PAGE_SLUG, 'fc_mycred_main' );
         }
@@ -90,6 +91,11 @@ class UMM_Admin {
         $output['min_comment_chars']     = max( 0, (int) ( $input['min_comment_chars'] ?? $defaults['min_comment_chars'] ) );
         $output['max_comments_per_hour'] = max( 0, (int) ( $input['max_comments_per_hour'] ?? $defaults['max_comments_per_hour'] ) );
         $output['enable_strict_reply']   = isset( $input['enable_strict_reply'] ) ? 1 : 0;
+
+        // Excluded words — sanitize and normalise to lowercase, comma-separated
+        $raw_words = sanitize_textarea_field( $input['excluded_words'] ?? '' );
+        $words     = array_filter( array_map( 'trim', explode( ',', $raw_words ) ) );
+        $output['excluded_words'] = implode( ', ', array_map( 'mb_strtolower', $words ) );
 
         $output['enable_referrals']       = isset( $input['enable_referrals'] ) ? 1 : 0;
         $output['referral_visit_points']  = max( 0, (float) ( $input['referral_visit_points'] ?? $defaults['referral_visit_points'] ) );
@@ -152,6 +158,17 @@ class UMM_Admin {
             esc_attr( self::OPTION_KEY ), checked( 1, (int) $o['enable_strict_reply'], false ),
             esc_html__( 'Enable Strict Reply Hierarchy (Echo-Chamber Prevention)', 'user-monetization-manager' ) );
         echo '<p class="description">' . esc_html__( 'If enabled, users will not be rewarded for replying to their own posts or comments.', 'user-monetization-manager' ) . '</p>';
+    }
+
+    public function field_excluded_words() {
+        $o = $this->get_options();
+        printf(
+            '<textarea name="%s[excluded_words]" rows="4" class="large-text" placeholder="%s">%s</textarea>',
+            esc_attr( self::OPTION_KEY ),
+            esc_attr__( 'nice, great, wow, lol', 'user-monetization-manager' ),
+            esc_textarea( $o['excluded_words'] )
+        );
+        echo '<p class="description">' . esc_html__( 'Comma-separated list of words. If a comment contains any of these words, the user will NOT be rewarded. Matching is case-insensitive and whole-word (e.g. "nice" will not block "nicely").', 'user-monetization-manager' ) . '</p>';
     }
 
     public function field_enable_referrals() {
@@ -658,6 +675,7 @@ class UMM_Admin {
             'min_comment_chars'         => 0,
             'max_comments_per_hour'     => 0,
             'enable_strict_reply'       => 0,
+            'excluded_words'            => '',
             'enable_referrals'          => 0,
             'referral_visit_points'     => 1,
             'referral_signup_points'    => 5,

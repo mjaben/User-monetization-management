@@ -125,6 +125,30 @@ class UMM_Rewards {
             }
         }
 
+        // ── Rule 4: Excluded Words ───────────────────────────────────
+        $excluded_raw = !empty($options['excluded_words']) ? $options['excluded_words'] : '';
+        if ( $excluded_raw !== '' ) {
+            // Build the comment text for word-matching (reuse $content_clean if set, else fetch it)
+            if ( ! isset( $content_clean ) ) {
+                $raw_content = '';
+                if ( is_object( $comment ) ) {
+                    $raw_content = $comment->content ?? $comment->message ?? '';
+                } elseif ( is_array( $comment ) ) {
+                    $raw_content = $comment['content'] ?? $comment['message'] ?? '';
+                }
+                $content_clean = trim( strip_tags( html_entity_decode( (string) $raw_content, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) );
+            }
+
+            $excluded_words = array_filter( array_map( 'trim', explode( ',', $excluded_raw ) ) );
+            foreach ( $excluded_words as $word ) {
+                // Whole-word, case-insensitive match using Unicode word boundaries.
+                $pattern = '/\b' . preg_quote( $word, '/' ) . '\b/iu';
+                if ( preg_match( $pattern, $content_clean ) ) {
+                    return; // Comment contains a banned word — no reward
+                }
+            }
+        }
+
         // Check if already awarded
         if ( function_exists('mycred_get_users_log_entries') ) {
             $existing = mycred_get_users_log_entries($user_id, 0, 1, [], [
