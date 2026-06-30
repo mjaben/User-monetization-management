@@ -72,8 +72,15 @@ class UMM_Rewards {
                 $content = $comment['content'] ?? $comment['message'] ?? '';
             }
             $content_clean = trim( strip_tags( html_entity_decode( (string) $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) ) );
-            if ( mb_strlen( $content_clean ) < $min_chars ) {
-                return; // Comment is too short
+
+            // Strip emojis and non-text symbols before counting.
+            // \p{L} = letters, \p{N} = numbers, \p{P} = punctuation, \p{Z} = separators/spaces.
+            // Anything outside these (emoji, pictographs, etc.) is removed so it cannot
+            // artificially inflate the character count (e.g. "lolz 😂" should count as 5, not 6).
+            $content_text_only = trim( preg_replace( '/[^\p{L}\p{N}\p{P}\p{Z}]/u', '', $content_clean ) );
+
+            if ( mb_strlen( $content_text_only ) < $min_chars ) {
+                return; // Comment text is too short (emojis excluded from count)
             }
         }
 
